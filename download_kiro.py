@@ -141,8 +141,87 @@ def find_kiro_binary(extract_dir):
     return None
 
 
-def create_symlink(binary_path):
-    """Create symbolic link to /usr/local/bin/kiro."""
+def create_launcher_wrapper():
+    """Create a launcher wrapper script that runs Kiro detached from terminal."""
+    launcher_path = SCRIPT_DIR / "kiro-launcher.sh"
+    launcher_content = f"""#!/bin/bash
+# Kiro launcher wrapper - runs Kiro detached from terminal
+
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${{BASH_SOURCE[0]}}")" && pwd)"
+KIRO_BINARY="$SCRIPT_DIR/Kiro/kiro"
+
+# Check if Kiro binary exists
+if [ ! -f "$KIRO_BINARY" ]; then
+    echo "Error: Kiro binary not found at $KIRO_BINARY"
+    echo "Please run download_kiro.py first to install Kiro"
+    exit 1
+fi
+
+# Launch Kiro in the background, detached from terminal
+# Redirect output to /dev/null to prevent terminal spam
+nohup "$KIRO_BINARY" "$@" > /dev/null 2>&1 &
+
+# Disown the process so it survives terminal closure
+disown
+
+exit 0
+"""
+    
+    try:
+        launcher_path.write_text(launcher_content)
+        launcher_path.chmod(0o755)
+        cprint(f"✓ Created launcher wrapper: {launcher_path}", Colors.GREEN)
+        return launcher_path
+    except Exception as e:
+        cprint(f"⚠ Warning: Could not create launcher wrapper: {e}", Colors.YELLOW)
+        return None
+
+
+def create_desktop_entry(launcher_path):
+    """Create desktop entry for application launchers."""
+    desktop_file = SCRIPT_DIR / "kiro.desktop"
+    desktop_content = f"""[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Kiro
+Comment=Kiro IDE - AI-powered code editor
+Exec={launcher_path}
+Icon={SCRIPT_DIR}/Kiro/resources/app/extensions/theme-seti/icons/seti-circular-128x128.png
+Terminal=false
+Categories=Development;IDE;TextEditor;
+StartupNotify=true
+StartupWMClass=Kiro
+"""
+    
+    try:
+        # Write desktop file
+        desktop_file.write_text(desktop_content)
+        
+        # Install to user applications directory
+        apps_dir = Path.home() / ".local" / "share" / "applications"
+        apps_dir.mkdir(parents=True, exist_ok=True)
+        
+        dest_desktop = apps_dir / "kiro.desktop"
+        dest_desktop.write_text(desktop_content)
+        
+        # Update desktop database
+        try:
+            subprocess.run(["update-desktop-database", str(apps_dir)], 
+                         check=False, capture_output=True)
+        except:
+            pass  # Not critical if this fails
+        
+        cprint(f"✓ Created desktop entry: {dest_desktop}", Colors.GREEN)
+        cprint(f"  Kiro should now appear in your application launcher!", Colors.GREEN)
+        return True
+    except Exception as e:
+        cprint(f"⚠ Warning: Could not create desktop entry: {e}", Colors.YELLOW)
+        return False
+
+
+def create_symlink(launcher_path):
+    """Create symbolic link to /usr/local/bin/kiro pointing to launcher wrapper."""
     cprint(f"\n🔗 Creating symbolic link...", Colors.CYAN)
     try:
         # Remove existing symlink if it exists
@@ -150,15 +229,15 @@ def create_symlink(binary_path):
             cprint(f"  Removing existing symlink: {SYMLINK_PATH}", Colors.YELLOW)
             subprocess.run(["sudo", "rm", "-f", str(SYMLINK_PATH)], check=True)
         
-        # Create new symlink
-        subprocess.run(["sudo", "ln", "-s", str(binary_path), str(SYMLINK_PATH)], check=True)
-        cprint(f"✓ Symbolic link created: {SYMLINK_PATH} -> {binary_path}", Colors.GREEN, bold=True)
-        cprint(f"  You can now run 'kiro' from anywhere!", Colors.GREEN)
+        # Create new symlink to launcher wrapper (not binary)
+        subprocess.run(["sudo", "ln", "-s", str(launcher_path), str(SYMLINK_PATH)], check=True)
+        cprint(f"✓ Symbolic link created: {SYMLINK_PATH} -> {launcher_path}", Colors.GREEN, bold=True)
+        cprint(f"  You can now run 'kiro' from anywhere (detached from terminal)!", Colors.GREEN)
         return True
     except subprocess.CalledProcessError as e:
         cprint(f"✗ Error creating symbolic link: {e}", Colors.RED, bold=True)
         cprint(f"  You may need to run this script with sudo or manually create the link:", Colors.YELLOW)
-        cprint(f"  sudo ln -s {binary_path} {SYMLINK_PATH}", Colors.YELLOW)
+        cprint(f"  sudo ln -s {launcher_path} {SYMLINK_PATH}", Colors.YELLOW)
         return False
 
 
@@ -249,8 +328,15 @@ def main():
         # Make binary executable
         binary_path.chmod(0o755)
         
-        # Create symbolic link
-        create_symlink(binary_path)
+        # Create launcher wrapper and desktop entry
+        cprint(f"\n🖥️  Setting up desktop integration...", Colors.CYAN)
+        launcher_path = create_launcher_wrapper()
+        if launcher_path:
+            create_desktop_entry(launcher_path)
+            # Create symbolic link to launcher wrapper (not binary)
+            create_symlink(launcher_path)
+        else:
+            cprint("⚠ Warning: Could not create launcher wrapper, skipping symlink", Colors.YELLOW)
     
     # Save installed version
     save_installed_version(latest_version)

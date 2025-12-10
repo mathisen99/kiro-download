@@ -7,8 +7,10 @@ A Python script to automatically download, install, and manage [Kiro IDE](https:
 ✨ **Smart Version Management** - Automatically checks for updates and prevents re-downloading the same version  
 🎨 **Beautiful Terminal Output** - Colored output with progress bars for better UX  
 📦 **Automatic Extraction** - Downloads and extracts Kiro to the script directory  
-🔗 **System-wide Access** - Creates a symbolic link to `/usr/local/bin/kiro` for easy access  
+�️ **Desktop Integration** - Creates launcher wrapper and desktop entry for GUI launchers (Hyprland, GNOME, KDE, etc.)  
+�🔗 **System-wide Access** - Creates a symbolic link to `/usr/local/bin/kiro` for easy terminal access  
 ⚡ **Quick Update Check** - Use `--check` flag to see if updates are available without downloading  
+🚀 **Background Execution** - Launcher wrapper runs Kiro detached from terminal  
 
 ## Requirements
 
@@ -46,7 +48,9 @@ This will:
 - Fetch the latest version metadata
 - Download the Kiro tar.gz file
 - Extract it to the script directory
-- Create a symbolic link at `/usr/local/bin/kiro`
+- Create a launcher wrapper script (`kiro-launcher.sh`) that runs Kiro detached from terminal
+- Create a desktop entry for your application launcher (Hyprland, GNOME, KDE, etc.)
+- Create a symbolic link at `/usr/local/bin/kiro` for terminal access
 - Clean up the downloaded tarball
 
 ### Check for Updates
@@ -57,10 +61,24 @@ python3 download_kiro.py --check
 This will check if a new version is available without downloading anything.
 
 ### Run Kiro
-After installation, you can run Kiro from anywhere:
+
+After installation, you can run Kiro in multiple ways:
+
+**From Terminal:**
 ```bash
-kiro
+kiro  # Runs in foreground, attached to terminal
 ```
+
+**From Application Launcher:**
+- Search for "Kiro" in your application launcher (Hyprland, Rofi, GNOME, KDE, etc.)
+- Click to launch - runs detached from terminal in the background
+
+**Using the Launcher Wrapper:**
+```bash
+./kiro-launcher.sh  # Runs in background, detached from terminal
+```
+
+The launcher wrapper is automatically created during installation and prevents terminal spam while allowing you to close the terminal without killing Kiro.
 
 ## Optional: Create an Alias
 
@@ -88,14 +106,17 @@ kiro-update --check  # Check for updates
 3. **Smart Download**: Only downloads if a new version is available
 4. **Auto-extraction**: Extracts the tarball to `./Kiro/` directory
 5. **Binary Location**: Finds the Kiro binary in the extracted files
-6. **Symlink Creation**: Creates `/usr/local/bin/kiro` → `./Kiro/kiro` (requires sudo)
-7. **Cleanup**: Removes the downloaded tarball to save space
+6. **Desktop Integration**: Creates launcher wrapper and desktop entry for GUI launchers
+7. **Symlink Creation**: Creates `/usr/local/bin/kiro` → `./Kiro/kiro` (requires sudo)
+8. **Cleanup**: Removes the downloaded tarball to save space
 
 ## File Structure
 
 ```
 kiro-downloader/
 ├── download_kiro.py    # Main script
+├── kiro-launcher.sh    # Launcher wrapper (auto-generated)
+├── kiro.desktop        # Desktop entry (auto-generated)
 ├── .kiro_version       # Tracks installed version (auto-generated)
 ├── Kiro/              # Extracted Kiro installation (auto-generated)
 ├── .gitignore         # Git ignore rules
@@ -127,6 +148,11 @@ Progress: [███████████████████████
 🔍 Locating Kiro binary...
 ✓ Found binary: /path/to/Kiro/kiro
 
+🖥️  Setting up desktop integration...
+✓ Created launcher wrapper: /path/to/kiro-launcher.sh
+✓ Created desktop entry: /home/user/.local/share/applications/kiro.desktop
+  Kiro should now appear in your application launcher!
+
 🔗 Creating symbolic link...
 ✓ Symbolic link created: /usr/local/bin/kiro -> /path/to/Kiro/kiro
   You can now run 'kiro' from anywhere!
@@ -155,6 +181,18 @@ If the script can't locate the Kiro binary after extraction, check the `Kiro/` d
 
 ### Network Issues
 If download fails, check your internet connection and try again. The script will show detailed error messages.
+
+### Kiro Not Appearing in Launcher
+If Kiro doesn't appear in your application launcher after installation:
+1. Try logging out and back in
+2. Manually run: `update-desktop-database ~/.local/share/applications/`
+3. Check if the desktop file exists: `ls ~/.local/share/applications/kiro.desktop`
+
+### Terminal Spam When Running Kiro
+Use the launcher wrapper or application launcher instead of running `kiro` directly:
+```bash
+./kiro-launcher.sh  # Runs detached from terminal
+```
 
 ## Contributing
 

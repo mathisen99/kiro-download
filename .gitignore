@@ -7,6 +7,10 @@ Kiro/
 # Version tracking file
 .kiro_version
 
+# Auto-generated launcher files
+kiro-launcher.sh
+kiro.desktop
+
 # Python cache
 __pycache__/
 *.py[cod]
