@@ -170,10 +170,34 @@ Progress: [███████████████████████
 
 ## Troubleshooting
 
+### Sudo Password Required
+During installation, the script creates a system-wide symlink at `/usr/local/bin/kiro` which requires `sudo` access.
+
+**If you have sudo password enabled:**
+- You'll be prompted to enter your password during installation
+- Enter your password and the installation will continue normally
+
+**If you don't have sudo access or prefer not to use it:**
+You can still use Kiro without the system-wide symlink:
+
+1. **Use the launcher wrapper directly:**
+   ```bash
+   /path/to/kiro-downloader/kiro-launcher.sh
+   ```
+
+2. **Create a shell alias** (add to `~/.zshrc` or `~/.bashrc`):
+   ```bash
+   alias kiro='/path/to/kiro-downloader/kiro-launcher.sh'
+   ```
+
+3. **Use the application launcher:**
+   - The desktop entry works without sudo
+   - Search for "Kiro" in your application launcher
+
 ### Permission Denied for Symlink Creation
 If you get a permission error when creating the symlink, the script will provide instructions to manually create it:
 ```bash
-sudo ln -s /path/to/Kiro/kiro /usr/local/bin/kiro
+sudo ln -s /path/to/kiro-launcher.sh /usr/local/bin/kiro
 ```
 
 ### Binary Not Found
