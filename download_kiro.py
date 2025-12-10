@@ -147,8 +147,9 @@ def create_launcher_wrapper():
     launcher_content = f"""#!/bin/bash
 # Kiro launcher wrapper - runs Kiro detached from terminal
 
-# Get the directory where this script is located
-SCRIPT_DIR="$(cd "$(dirname "${{BASH_SOURCE[0]}}")" && pwd)"
+# Resolve the real path of this script (follows symlinks)
+SCRIPT_PATH="$(readlink -f "${{BASH_SOURCE[0]}}")"
+SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
 KIRO_BINARY="$SCRIPT_DIR/Kiro/kiro"
 
 # Check if Kiro binary exists
