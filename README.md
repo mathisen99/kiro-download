@@ -12,6 +12,12 @@ A Python script to automatically download, install, and manage [Kiro IDE](https:
 ⚡ **Quick Update Check** - Use `--check` flag to see if updates are available without downloading  
 🚀 **Background Execution** - Launcher wrapper runs Kiro detached from terminal  
 
+## Screenshots
+
+![Kiro IDE Screenshot 1](img/kiro1.png)
+
+![Kiro IDE Screenshot 2](img/kiro2.png)
+
 ## Requirements
 
 - Python 3.6+
