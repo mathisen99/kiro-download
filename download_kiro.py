@@ -159,6 +159,12 @@ if [ ! -f "$KIRO_BINARY" ]; then
     exit 1
 fi
 
+# If this is just a shell integration query, pass it through directly (no nohup)
+if [[ "$*" == *"--locate-shell-integration-path"* ]]; then
+    exec "$KIRO_BINARY" "$@"
+    exit 0
+fi
+
 # Launch Kiro in the background, detached from terminal
 # Redirect output to /dev/null to prevent terminal spam
 nohup "$KIRO_BINARY" "$@" > /dev/null 2>&1 &
